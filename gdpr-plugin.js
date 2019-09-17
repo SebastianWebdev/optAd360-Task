@@ -2,7 +2,7 @@
     'use strict'
     // creates html box structure. As input, takes an object with properties:
     // text - required. Type = String. It is a message to display, default empty string;
-    // callback - optional. Type = Function. It is a callback function that will be run after click event on                                             buttons
+    // callback - optional. Type = Function. It is a callback function that will be run after click event on                                             buttons. It takes one argument with decision data
     // style - optional. Type = Array. Contains arrays with style property name and value,
     // parent - optional. Type = HTML Element, Dom Node,  gdpr box will be placed in this element. Default: body
     // title - optiona. type = String. It is a title of the Gdpr Box. Default: 'GDPR consent'
@@ -40,29 +40,35 @@
             </div >`
 
         parent ? parent.insertAdjacentHTML("afterbegin", HTMLBox) : document.body.insertAdjacentHTML("afterbegin", HTMLBox)
-        const defaultCallback = e => {
+
+        const handleUserDecision = e => {
             e.stopPropagation()
+            const key = keyName ? keyName : "userGdpr";
             if (e.target.classList.contains("gdpr__btn")) {
                 switch (e.target.id) {
                     case 'gdpr__btn--accept':
-                        setUserDecision('accept', keyName)
+                        const decisionAccept = setUserDecision('accept', key)
+                        callback ? callback(decisionAccept) : null
                         break;
                     case "gdpr__btn--cancel":
-                        setUserDecision('cancel', keyName)
+                        const decisionCancel = setUserDecision('cancel', key)
+                        callback ? callback(decisionCancel) : null
                         break;
                 }
+
                 e.currentTarget.remove()
             }
 
         }
 
-        document.getElementById('gdpr__box').addEventListener('click', callback ? callback : defaultCallback)
+        document.getElementById('gdpr__box').addEventListener('click', handleUserDecision)
     }
 
     // Save user decision in local storage. Creates a JSON string with decision and date property.
     const setUserDecision = (decision, keyName = "userGdpr") => {
         const data = { decision, date: new Date().getTime() }
         localStorage.setItem(keyName, JSON.stringify(data))
+        return data
     }
 
     // get user decision from local storage and parse it to valid JavaScript Object.
@@ -90,10 +96,8 @@
         }
     }
     const text = ' Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut id reiciendis reprehenderit nostrum dicta itaque cupiditate, voluptatem placeat suscipit maxime mollitia ducimus quia vel quis, porro quas dolorem voluptas at.Odit, deleniti optio aut et nisi quibusdam, quod omnis repudiandae culpa aliquid tempora saepe reiciendis obcaecati itaque, quaerat impedit. Soluta pariatur ex excepturi expedita reprehenderit vitae quibusdam assumenda nemo laboriosam!Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut id reiciendis reprehenderit nostrum dicta itaque cupiditate, voluptatem placeat suscipit maxime '
-
-    gdprPlugin({ text })
+    const callback = (data) => {
+        console.log(data);
+    }
+    gdprPlugin({ text, callback })
 }
-
-
-
-
